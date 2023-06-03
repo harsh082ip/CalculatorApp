@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:math_expressions/math_expressions.dart';
 
 class Calculator extends StatefulWidget {
   const Calculator({Key? key}) : super(key: key);
@@ -8,11 +9,45 @@ class Calculator extends StatefulWidget {
 }
 
 class _CalculatorState extends State<Calculator> {
+  var input = '';
+  var output = '';
+  var hideInput = false;
+  var outputSize = 38.0;
+  onButtonClick(value) {
+    print(value);
+    if (value == 'AC') {
+      input = '';
+      output = '';
+    } else if (value == '<---') {
+      if (input.isNotEmpty) {
+        input = input.substring(0, input.length - 1);
+      }
+    } else if (value == '=') {
+      if (input.isNotEmpty) {
+        var userInput = input;
+        userInput = input.replaceAll('x', '*');
+        Parser par = Parser();
+        Expression expression = par.parse(userInput);
+        ContextModel cm = ContextModel();
+        var finValue = expression.evaluate(EvaluationType.REAL, cm);
+        output = finValue.toString();
+        if (output.endsWith('.0')) {
+          output = output.substring(0, output.length - 2);
+        }
+        input = output;
+        hideInput = true;
+        outputSize = 56.0;
+      }
+    } else {
+      input = input + value;
+      hideInput = false;
+      outputSize = 38.0;
+    }
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final containerHeight1 = screenHeight * 0.4;
-    final containerHeight2 = screenHeight - containerHeight1;
     return Scaffold(
       body: Container(
         color: Color.fromARGB(255, 209, 159, 240),
@@ -27,16 +62,17 @@ class _CalculatorState extends State<Calculator> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Text(
-                        'Input',
+                        hideInput ? '' : input,
                         style: TextStyle(color: Colors.white, fontSize: 48),
                       ),
                       SizedBox(
                         height: 20.0,
                       ),
                       Text(
-                        'Output',
+                        output,
                         style: TextStyle(
-                            color: Colors.white.withOpacity(0.7), fontSize: 38),
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: outputSize),
                       ),
                       SizedBox(
                         height: 30.0,
@@ -77,7 +113,7 @@ class _CalculatorState extends State<Calculator> {
                 buttons(text: '8'),
                 buttons(text: '9'),
                 buttons(
-                  text: 'X',
+                  text: 'x',
                   buttonColor: Color.fromARGB(255, 238, 235, 235),
                 ),
               ],
@@ -134,7 +170,9 @@ class _CalculatorState extends State<Calculator> {
             padding: EdgeInsets.all(22),
             backgroundColor: buttonColor,
           ),
-          onPressed: () {},
+          onPressed: () {
+            onButtonClick(text);
+          },
           child: Text(
             text,
             style: TextStyle(fontSize: 18.0, color: textColor),
